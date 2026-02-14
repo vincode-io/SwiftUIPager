@@ -162,6 +162,9 @@ extension Pager {
         @State var digitalCrownPageOffset: CGFloat = 0
 
         #endif
+        
+        /// Progressive loading state: tracks how many pages have been loaded so far
+        @State var progressiveLoadRadius: Int = 0
 
         /// Initializes a new `Pager`.
         ///
@@ -279,8 +282,53 @@ extension Pager {
                     .eraseToAny()
             }
             #endif
+            
+            // Progressive loading: expand the loaded pages over time
+            if case .progressive = contentLoadingPolicy {
+                if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
+                    resultView = resultView
+                        .task {
+                            await expandProgressiveLoading()
+                        }
+                        .eraseToAny()
+                } else {
+                    resultView = resultView
+                        .onAppear {
+                            expandProgressiveLoadingLegacy()
+                        }
+                        .eraseToAny()
+                }
+            }
 
             return resultView.contentShape(Rectangle())
+        }
+        
+        /// Progressively expands the number of loaded pages (iOS 15+)
+        @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+        private func expandProgressiveLoading() async {
+            guard case .progressive(let initialCount, _) = contentLoadingPolicy else { return }
+            
+            // Load initial page(s) immediately (radius 0)
+            // Then expand once to load adjacent pages
+            if progressiveLoadRadius == 0 && Int(initialCount) < numberOfPages {
+                // Delay to allow user to view the first page before loading adjacent pages
+                try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+                progressiveLoadRadius = 1
+                pagerModel.objectWillChange.send()
+            }
+        }
+        
+        /// Progressively expands the number of loaded pages (iOS 13-14)
+        private func expandProgressiveLoadingLegacy() {
+            guard case .progressive(let initialCount, _) = contentLoadingPolicy else { return }
+            
+            // Load initial page(s) immediately, then expand once after a delay
+            if progressiveLoadRadius == 0 && Int(initialCount) < numberOfPages {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    self.progressiveLoadRadius = 1
+                    self.pagerModel.objectWillChange.send()
+                }
+            }
         }
     }
 }

@@ -21,6 +21,13 @@ public enum ContentLoadingPolicy: Equatable {
 
     /// Choose `eager` to load all items at once
     case eager
+    
+    /// Progressive loading: starts with the current page, then loads adjacent pages after the initial page is visible.
+    /// This provides the fastest initial display while still loading other pages in the background.
+    ///
+    /// - Parameter initialCount: Number of pages to load initially (default 1). These will be centered around the current page.
+    /// - Parameter expansionRate: Number of additional pages to load in each direction during progressive loading (default 2).
+    case progressive(initialCount: UInt = 1, expansionRate: UInt = 2)
 
     /// Default policy, a.k.a, `lazy(recyclingRatio: 5)`
     static var `default`: ContentLoadingPolicy = .lazy(recyclingRatio: 5)

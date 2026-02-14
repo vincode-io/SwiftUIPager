@@ -42,6 +42,8 @@ extension Pager.PagerContent {
             return numberOfPages
         case .lazy(let ratio):
             return max(1, Int(ratio))
+        case .progressive(let initialCount, _):
+            return max(1, Int(initialCount))
         }
     }
 
@@ -154,6 +156,22 @@ extension Pager.PagerContent {
     var maximumNumberOfPages: Int {
         guard contentLoadingPolicy != .eager else { return numberOfPages }
         guard pageDistance != 0, numberOfPages > 0 else { return 0 }
+        
+        // Handle progressive loading
+        if case .progressive(let initialCount, let expansionRate) = contentLoadingPolicy {
+            // Calculate pages to show based on progressive load radius
+            let baseCount = Int(initialCount)
+            let additionalPages = progressiveLoadRadius * Int(expansionRate) * 2
+            var number = min(baseCount + additionalPages, numberOfPages)
+            
+            // Ensure odd number for symmetry around current page
+            number = number.isMultiple(of: 2) ? number + 1 : number
+            
+            guard isInifinitePager else { return number }
+            number = min(number, numberOfPages)
+            return number.isMultiple(of: 2) ? number - 1 : number
+        }
+        
         let side = isHorizontal ? size.width : size.height
         var number = Int((CGFloat(recyclingRatio) * side / pageDistance).rounded(.up))
         number = number.isMultiple(of: 2) ? (recyclingRatio.isMultiple(of: 2) ? number + 1 : number - 1) : number

@@ -308,6 +308,31 @@ var body: some View {
 
 `Pager` recycles views by default and won't have loaded all pages in memory at once. In some scenarios, this might be counterproductive, for example, if you're trying to manually scroll from the first page to the last. For these scenarios, use `.contentLoadingPolicy` and choose among the options available.
 
+### Available Policies
+
+- **`.lazy(recyclingRatio:)`** (Default): Loads a subset of pages based on a recycling ratio. A ratio of 5 will load enough items to fill five times the size of the Pager.
+
+- **`.eager`**: Loads all pages at once. Use this when you have a small number of pages or need all pages in memory.
+
+- **`.progressive(initialCount:expansionRate:)`**: Loads the initial page(s) immediately for fast display, then loads adjacent pages after a short delay. This provides the best initial load performance.
+  - `initialCount`: Number of pages to load initially (default: 1)
+  - `expansionRate`: Number of additional pages to load in each direction after the initial load (default: 2)
+
+### Example: Progressive Loading
+
+For the fastest initial display:
+
+```swift
+Pager(page: page,
+      data: items,
+      id: \.self) {
+    pageView($0)
+}
+.contentLoadingPolicy(.progressive(initialCount: 1, expansionRate: 2))
+```
+
+This will show the first page immediately, then after 1.5 seconds load 2 pages before and 2 pages after (5 total), keeping only nearby pages in memory.
+
 ## Examples
 
 For more information, please check the [sample app](/Example). There are included several common use-cases:
