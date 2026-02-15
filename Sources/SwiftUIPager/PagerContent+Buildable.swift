@@ -123,6 +123,20 @@ extension Pager.PagerContent: Buildable {
     func pagingPriority(_ value: GesturePriority) -> Self {
         mutating(keyPath: \.gesturePriority, value: value)
     }
+    
+    /// Sets the angle tolerance for gesture direction detection
+    ///
+    /// - Parameter tolerance: angle tolerance in degrees (default: 30°)
+    func gestureAngleTolerance(_ tolerance: Double) -> Self {
+        mutating(keyPath: \.gestureAngleTolerance, value: tolerance)
+    }
+    
+    /// Sets the horizontal bias ratio for gesture disambiguation
+    ///
+    /// - Parameter ratio: ratio of horizontal to vertical movement required (default: 1.0)
+    func horizontalBiasRatio(_ ratio: CGFloat) -> Self {
+        mutating(keyPath: \.horizontalBiasRatio, value: max(0, ratio))
+    }
 
     /// Indicates which area should allow hits and react to swipes
     ///

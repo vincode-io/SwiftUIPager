@@ -118,6 +118,14 @@ extension Pager {
 
         /// Priority selected to add `swipeGesture`
         var gesturePriority: GesturePriority = .default
+        
+        /// Angle tolerance (in degrees) for determining if swipe is along X-axis (default: 30°)
+        /// Lower values require more horizontal swipes, providing better vertical scroll resistance
+        var gestureAngleTolerance: Double = 30
+        
+        /// Ratio required for horizontal vs vertical movement to initiate paging (default: 1.0)
+        /// Values > 1.0 require more horizontal movement relative to vertical, improving vertical scroll
+        var horizontalBiasRatio: CGFloat = 1.0
 
         /// Will apply this ratio to each page item. The aspect ratio follows the formula _width / height_
         var itemAspectRatio: CGFloat?
@@ -385,8 +393,8 @@ extension Pager.PagerContent {
             let currentTranslation = dragTranslation(for: value)
             let lastLocation = self.lastDraggingValue.flatMap(dragLocation) ?? currentLocation
             let swipeAngle = (currentLocation - lastLocation).angle ?? .zero
-            // Ignore swipes that aren't on the X-Axis
-            guard swipeAngle.isAlongXAxis else {
+            // Ignore swipes that aren't on the X-Axis (using configurable tolerance)
+            guard swipeAngle.isAlongXAxis(tolerance: gestureAngleTolerance) else {
                 self.pagerModel.lastDraggingValue = value
                 return
             }
@@ -396,7 +404,8 @@ extension Pager.PagerContent {
             let offsetIncrement = (currentLocation.x - lastLocation.x) * normalizedRatio
 
             // If swipe hasn't started yet, ignore swipes if they didn't start on the X-Axis
-            let isTranslationInXAxis = abs(currentTranslation.width) > abs(currentTranslation.height)
+            // Apply horizontal bias ratio to require more horizontal movement relative to vertical
+            let isTranslationInXAxis = abs(currentTranslation.width) > abs(currentTranslation.height) * horizontalBiasRatio
             guard self.draggingOffset != 0 || isTranslationInXAxis else {
                 return
             }

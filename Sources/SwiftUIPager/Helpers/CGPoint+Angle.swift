@@ -39,7 +39,18 @@ extension CGPoint {
 @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 extension Angle {
     var isAlongXAxis: Bool {
+        isAlongXAxis(tolerance: 30)
+    }
+    
+    /// Checks if the angle is along the X-axis within a given tolerance
+    /// - Parameter tolerance: Angle tolerance in degrees (default: 30°)
+    /// - Returns: True if the angle is within tolerance of horizontal (0°, 180°)
+    func isAlongXAxis(tolerance: Double) -> Bool {
         let degrees = ((Int(self.degrees.rounded()) % 360) + 360) % 360
-        return degrees >= 330 || degrees <= 30 || (degrees >= 150 && degrees <= 210)
+        let lowerBound = Int((360 - tolerance).rounded())
+        let upperBound = Int(tolerance.rounded())
+        let lowerMidBound = Int((180 - tolerance).rounded())
+        let upperMidBound = Int((180 + tolerance).rounded())
+        return degrees >= lowerBound || degrees <= upperBound || (degrees >= lowerMidBound && degrees <= upperMidBound)
     }
 }

@@ -140,6 +140,12 @@ public struct Pager<Element, ID, PageView>: View  where PageView: View, Element:
 
     /// Priority selected to add `swipeGesture`
     var gesturePriority: GesturePriority = .default
+    
+    /// Angle tolerance (in degrees) for determining if swipe is along X-axis (default: 30°)
+    var gestureAngleTolerance: Double = 30
+    
+    /// Ratio required for horizontal vs vertical movement to initiate paging (default: 1.0)
+    var horizontalBiasRatio: CGFloat = 1.0
 
     /// Will apply this ratio to each page item. The aspect ratio follows the formula _width / height_
     var itemAspectRatio: CGFloat?
@@ -220,6 +226,8 @@ public struct Pager<Element, ID, PageView>: View  where PageView: View, Element:
             .swipeInteractionArea(swipeInteractionArea)
             .allowsDragging(allowsDragging)
             .pagingPriority(gesturePriority)
+            .gestureAngleTolerance(gestureAngleTolerance)
+            .horizontalBiasRatio(horizontalBiasRatio)
             .delaysTouches(delaysTouches)
             .sensitivity(sensitivity)
             .onDraggingBegan(onDraggingBegan)
