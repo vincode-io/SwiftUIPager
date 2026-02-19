@@ -320,7 +320,7 @@ extension Pager {
             // Then expand once to load adjacent pages
             if progressiveLoadRadius == 0 && Int(initialCount) < numberOfPages {
                 // Delay to allow user to view the first page before loading adjacent pages
-                try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+                try? await Task.sleep(nanoseconds: 500_000_000) // 5 seconds
                 progressiveLoadRadius = 1
                 pagerModel.objectWillChange.send()
             }
