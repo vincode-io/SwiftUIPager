@@ -135,4 +135,65 @@ extension Page {
         objectWillChange.send()
     }
 
+    #if os(macOS)
+    /// Updates the dragging offset and notifies observers, allowing
+    /// external code (e.g. trackpad scroll events) to drive the pager's
+    /// sliding animation.
+    ///
+    /// - Parameter offset: The new dragging offset in points.
+    public func setDraggingOffset(_ offset: CGFloat) {
+        draggingOffset = offset
+        objectWillChange.send()
+    }
+
+    /// Settles the pager after an externally driven scroll gesture ends.
+    /// Determines whether the offset is large enough to change the page
+    /// and animates to the final position.
+    ///
+    /// - Parameters:
+    ///   - pageDistance: The distance (in points) that represents one full page.
+    ///   - sensitivity: The fraction of `pageDistance` that must be exceeded to change pages (0...1).
+    ///   - onPageWillChange: Called with the new page index before the transition animates.
+    ///   - onPageChanged: Called with the new page index when the page changes.
+    public func settleAfterScroll(
+        pageDistance: CGFloat,
+        sensitivity: CGFloat = 0.5,
+        onPageWillChange: ((Int) -> Void)? = nil,
+        onPageChanged: ((Int) -> Void)? = nil
+    ) {
+        guard pageDistance > 0 else { return }
+
+        let normalizedOffset = draggingOffset / pageDistance
+        let absFraction = abs(normalizedOffset)
+
+        var newPage = index
+        if absFraction >= sensitivity {
+            // Negative offset = forward (next), positive offset = backward (previous)
+            newPage = normalizedOffset < 0 ? index + 1 : index - 1
+            newPage = max(0, min(totalPages - 1, newPage))
+        }
+
+        let willChange = newPage != index
+
+        if willChange {
+            onPageWillChange?(newPage)
+        }
+
+        withAnimation(.smooth(duration: 0.4)) {
+            draggingOffset = 0
+            if willChange {
+                pageIncrement = 1
+                index = newPage
+            }
+            objectWillChange.send()
+        }
+
+        if willChange {
+			Task { @MainActor in
+				onPageChanged?(newPage)
+			}
+        }
+    }
+    #endif
+
 }
